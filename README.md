@@ -1,71 +1,51 @@
-# copilot-chat-pkm-exporter README
+# Copilot PKM Bridge
 
-This is the README for your extension "copilot-chat-pkm-exporter". After writing up a brief description, we recommend including the following sections.
+**Export your GitHub Copilot chat sessions to clean, usable Markdown.**
 
-## Features
+Recover your AI conversations from VS Code's internal storage and turn them into permanent knowledge notes for Obsidian, Logseq, Notion, or your personal docs.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## 🚀 Features
 
-For example if there is an image subfolder under your extension project workspace:
+*   **🔍 Auto-Discovery**: Automatically finds Copilot chat sessions hidden in VS Code's `workspaceStorage` across Windows, macOS, and Linux.
+*   **📂 Universal Support**: Robustly handles both legacy (`.json`) and modern (`.jsonl`) Copilot storage formats.
+*   **📝 Clean Markdown**: Converts complex internal JSON data into human-readable Markdown.
+    *   Preserves code blocks and language syntax highlighting.
+    *   Clearly distinguishes between **User** and **Copilot** messages.
+    *   Handles streamed and chunked responses accurately.
+*   **⚡ Instant Access**: Fast "Quick Pick" interface lists all your sessions, sorted by recent activity.
+*   **🔒 Local & Private**: Runs entirely locally. No API keys required, no telemetry, and no data leaves your machine.
 
-\!\[feature X\]\(images/feature-x.png\)
+## 💡 Use Cases
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+*   **Personal Knowledge Management (PKM)**: "I solved this with Copilot last week, but I lost the chat." -> Now you can save it to your Obsidian vault.
+*   **Documentation**: Quickly turn an architectural discussion or code explanation into a `DOCS.md` file for your repo.
+*   **Team Sharing**: Share a complex debugging session or solution with a colleague without sending multiple screenshots.
+*   **Audit Trail**: Keep a version-controlled history of AI decisions and code generation.
 
-## Requirements
+## 📖 How to Use
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+1.  Open the **Command Palette** (`Ctrl+Shift+P` on Windows/Linux, `Cmd+Shift+P` on macOS).
+2.  Type and select: **`Copilot PKM: Export Chat to Markdown`**.
+3.  A list of your recent Copilot sessions will appear (showing date and turn count).
+4.  Select the session you want to export.
+5.  The chat will open instantly in a new **Markdown editor tab**.
+6.  Review the content and **Save** (`Ctrl+S` / `Cmd+S`) it to your preferred location.
 
-## Extension Settings
+## ⚙️ Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+*   `copilot-pkm-bridge.defaultExportFolder`: (Coming Soon) Define a default folder (e.g., `${workspaceFolder}/docs`) for quicker saving.
+*   `copilot-pkm-bridge.includeMetadata`: (Coming Soon) Toggle inclusion of YAML frontmatter (dates, model info) in the exported file.
 
-For example:
+## 📦 Requirements
 
-This extension contributes the following settings:
+*   **Visual Studio Code** (v1.90.0 or newer recommended).
+*   **GitHub Copilot Chat** extension installed and used (so that chat history exists locally).
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## 🔧 Known Issues
 
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+*   If you have moved or renamed workspaces, some sessions might be listed under "Unknown Workspace" until you open that workspace again.
+*   Very large sessions (>50k tokens) might take a second or two to parse.
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**Enjoy building your AI knowledge base!**
