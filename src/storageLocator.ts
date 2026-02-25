@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import * as readline from 'readline';
 
 export interface ChatSessionSummary {
     sessionId: string;
@@ -101,45 +102,75 @@ export class StorageLocator {
                     const filePath = path.join(chatSessionsDir, file);
                     try {
                         let content: any;
-                        let date: Date;
+                        let date: Date = new Date();
                         let turnCount = 0;
                         let sessionId = '';
                         let title = 'Empty Session';
 
                         if (file.endsWith('.jsonl')) {
-                            // For JSONL, we read the first line to get the session metadata (kind: 0)
-                            const fd = await fs.promises.open(filePath, 'r');
+                            const fileStream = fs.createReadStream(filePath);
+                            const rl = readline.createInterface({
+                                input: fileStream,
+                                crlfDelay: Infinity
+                            });
+
+                            let linesRead = 0;
+                            const maxLinesToRead = 50; // Read enough lines to likely find customTitle
+
                             try {
-                                const stream = fd.createReadStream({ encoding: 'utf8', start: 0, end: 4096 }); // Read first 4KB
-                                let chunk = '';
-                                for await (const part of stream) {
-                                    chunk += part;
-                                    if (chunk.includes('\n')) {
+                                for await (const line of rl) {
+                                    linesRead++;
+                                    if (linesRead > maxLinesToRead && title !== 'Empty Session') {
                                         break;
                                     }
-                                }
-                                
-                                const firstLine = chunk.split('\n')[0];
-                                try {
-                                    const jsonlData = JSON.parse(firstLine);
-                                    if (jsonlData.kind === 0 && jsonlData.v) {
-                                        content = jsonlData.v;
-                                        sessionId = content.sessionId;
-                                        date = new Date(content.creationDate || Date.now());
-                                        turnCount = content.requests ? content.requests.length : 0;
-                                        
-                                        // Initial title from first request if available
-                                        if (content.requests && content.requests.length > 0 && content.requests[0].message && content.requests[0].message.text) {
-                                            title = content.requests[0].message.text.substring(0, 50).replace(/[\r\n]+/g, ' ');
+                                    
+                                    if (!line.trim()) {continue;}
+
+                                    try {
+                                        const jsonlData = JSON.parse(line);
+                                        const kind = jsonlData.kind;
+                                        const k = jsonlData.k || [];
+                                        const v = jsonlData.v;
+
+                                        // 1. Session Metadata (kind: 0)
+                                        if (kind === 0 && v) {
+                                            if (v.sessionId) {sessionId = v.sessionId;}
+                                            if (v.creationDate) {date = new Date(v.creationDate);}
+                                            
+                                            // Check for initial requests in metadata
+                                            if (v.requests && Array.isArray(v.requests)) {
+                                                turnCount += v.requests.length;
+                                                if (v.requests.length > 0) {
+                                                    const firstMsg = v.requests[0].message?.text;
+                                                    if (firstMsg && title === 'Empty Session') {
+                                                        title = firstMsg.substring(0, 50).replace(/[\r\n]+/g, ' ');
+                                                    }
+                                                }
+                                            }
                                         }
-                                    } else {
+                                        
+                                        // 2. Custom Title (kind: 1, k: ["customTitle"])
+                                        else if (kind === 1 && k.length === 1 && k[0] === 'customTitle' && typeof v === 'string') {
+                                            title = v;
+                                        }
+
+                                        // 3. Appended Requests (kind: 2, k: ["requests"])
+                                        else if (kind === 2 && k.length === 1 && k[0] === 'requests' && Array.isArray(v)) {
+                                            turnCount += v.length;
+                                            if (v.length > 0) {
+                                                const firstMsg = v[0].message?.text;
+                                                if (firstMsg && title === 'Empty Session') {
+                                                    title = firstMsg.substring(0, 50).replace(/[\r\n]+/g, ' ');
+                                                }
+                                            }
+                                        }
+                                    } catch (e) {
                                         continue;
                                     }
-                                } catch (e) {
-                                    continue;
                                 }
                             } finally {
-                                await fd.close();
+                                rl.close();
+                                fileStream.destroy();
                             }
                         } else {
                             const contentStr = await fs.promises.readFile(filePath, 'utf8');
