@@ -4,34 +4,42 @@
 
 Recover your AI conversations from VS Code's internal storage or exported files and turn them into permanent knowledge notes for Obsidian, Logseq, Notion, or your personal docs.
 
+<p align="center">
+  <img src="src/assets/demo.gif" width="700" alt="Demo">
+</p>
+
 ## 🚀 Features
 
 *   **🔍 Auto-Discovery**: Automatically finds Copilot chat sessions hidden in VS Code's `workspaceStorage` across Windows, macOS, and Linux.
 *   **📂 Universal Support**: Robustly handles both legacy (`.json`) and modern (`.jsonl`) Copilot storage formats.
 *   **🔁 Manual Conversion**: Convert any exported Copilot JSON/JSONL file to Markdown.
-*   **📝 Clean Markdown**: Converts complex internal JSON data into human-readable Markdown.
-    *   Preserves code blocks and language syntax highlighting.
-    *   Clearly distinguishes between **User** and **Copilot** messages.
-    *   **Terminal Output**: Captures and formats executed terminal commands and their output.
-    *   Handles streamed and chunked responses accurately.
-*   **⚡ Instant Access**: Fast "Quick Pick" interface lists all your sessions, sorted by recent activity and grouped by workspace.
-*   **🔒 Local & Private**: Runs entirely locally. No API keys required, no telemetry, and no data leaves your machine.
+* **📦 Bulk Export**: Export all chat sessions from your current workspace to a structured `.wingman` directory with a single command.
+* **📝 Clean Markdown**: Converts complex internal JSON data into human-readable Markdown.
+  * Preserves code blocks and language syntax highlighting.
+  * Clearly distinguishes between **User** and **Copilot** messages.
+  * **Terminal Output**: Captures and formats executed terminal commands and their output.
+  * Handles streamed and chunked responses accurately.
+* **⚡ Instant Access**: Fast "Quick Pick" interface lists all your sessions, sorted by recent activity and grouped by workspace.
+* **🔒 Local & Private**: Runs entirely locally. No API keys required, no telemetry, and no data leaves your machine.
 
 ## 💡 Use Cases
 
-*   **Personal Knowledge Management (PKM)**: "I solved this with Copilot last week, but I lost the chat." -> Now you can save it to your Obsidian vault.
-*   **Documentation**: Quickly turn an architectural discussion or code explanation into a `DOCS.md` file for your repo.
-*   **Team Sharing**: Share a complex debugging session or solution with a colleague without sending multiple screenshots.
-*   **Audit Trail**: Keep a version-controlled history of AI decisions and code generation.
+* **Personal Knowledge Management (PKM)**: "I solved this with Copilot last week, but I lost the chat." -> Now you can save it to your Obsidian vault.
+* **Documentation**: Quickly turn an architectural discussion or code explanation into a `DOCS.md` file for your repo.
+* **Team Sharing**: Share a complex debugging session or solution with a colleague without sending multiple screenshots.
+* **Audit Trail**: Keep a version-controlled history of AI decisions and code generation.
+* **Wingman**: Create a comprehensive `.wingman` directory in your project root, containing all your AI chat history and project metadata. This is perfect for archiving, analyzing, or feeding into other AI tools.
 
 ## 📖 How to Use
 
 ### Exporting from Workspace History
-1.  Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
-2.  Choose one of the following commands:
-    *   **`Copilot PKM: Export Chat (Current Workspace)`**: Shows chats only from the currently open project.
-    *   **`Copilot PKM: Export Chat (All Workspaces)`**: Scans all your local VS Code history and groups chats by workspace.
-3.  Select the session you want to export.
+
+1. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+2. Choose one of the following commands:
+    * **`Copilot PKM: Export Chat (Current Workspace)`**: Shows chats only from the currently open project.
+    * **`Copilot PKM: Export Chat (All Workspaces)`**: Scans all your local VS Code history and groups chats by workspace.
+    * **`Copilot PKM: Export All to .wingman (Current Workspace)`**: Automatically exports *all* chat sessions from the current workspace into a `.wingman` folder at the root of your project. This includes a `history/` subdirectory with Markdown files and a `.project.json` file with metadata.
+3. Select the session you want to export (for single export commands).
 4.  The chat will open instantly in a new **Markdown editor tab**.
 5.  Review the content and **Save** (`Ctrl+S` / `Cmd+S`) it to your preferred location.
 

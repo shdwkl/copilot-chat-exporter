@@ -1,12 +1,22 @@
 {
-  "name": "copilot-chat-pkm-exporter",
+  "name": "copilot-chat-to-markdown",
   "publisher": "copilot-pkm-bridge",
-  "displayName": "Copilot Chat PKM Exporter",
-  "description": "Exports local GitHub Copilot JSONL chat history to structured Markdown.",
+  "displayName": "Copilot Chat to Markdown",
+  "description": "Export GitHub Copilot chat history (JSON/JSONL) to Markdown. Ideal for Obsidian, Notion, or archiving.",
   "version": "0.0.2",
   "engines": {
     "vscode": "^1.109.0"
   },
+  "keywords": [
+    "copilot",
+    "chat",
+    "markdown",
+    "export",
+    "jsonl",
+    "history",
+    "obsidian",
+    "pkm"
+  ],
   "categories": [
     "Other"
   ],
@@ -16,27 +26,27 @@
     "commands": [
       {
         "command": "copilot-pkm-bridge.exportChat",
-        "title": "Copilot PKM: Export Chat (All Workspaces)",
-        "category": "Copilot PKM"
+        "title": "Export Copilot Chat: All Workspaces",
+        "category": "Copilot Export"
       },
       {
         "command": "copilot-pkm-bridge.exportChatCurrent",
-        "title": "Copilot PKM: Export Chat (Current Workspace)",
-        "category": "Copilot PKM"
+        "title": "Export Copilot Chat: Current Workspace",
+        "category": "Copilot Export"
       },
       {
         "command": "copilot-pkm-bridge.exportAllToWingman",
-        "title": "Copilot PKM: Export All to .wingman (Current Workspace)",
-        "category": "Copilot PKM"
+        "title": "Export Copilot Chat: Backup to .wingman (Bulk Export)",
+        "category": "Copilot Export"
       },
       {
         "command": "copilot-pkm-bridge.convertFile",
-        "title": "Copilot PKM: Convert Chat Export File...",
-        "category": "Copilot PKM"
+        "title": "Export Copilot Chat: Convert JSON/JSONL File...",
+        "category": "Copilot Export"
       }
     ],
     "configuration": {
-      "title": "Copilot PKM Bridge",
+      "title": "Copilot Chat to Markdown",
       "properties": {
         "copilot-pkm-bridge.defaultExportFolder": {
           "type": "string",
