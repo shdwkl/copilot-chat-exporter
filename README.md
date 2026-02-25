@@ -1,4 +1,4 @@
-# Copilot PKM Bridge
+# Copilot Chat to Markdown
 
 **Export your GitHub Copilot chat sessions to clean, usable Markdown.**
 
@@ -36,15 +36,15 @@ Recover your AI conversations from VS Code's internal storage or exported files 
 
 1. Open the **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 2. Choose one of the following commands:
-    * **`Copilot PKM: Export Chat (Current Workspace)`**: Shows chats only from the currently open project.
-    * **`Copilot PKM: Export Chat (All Workspaces)`**: Scans all your local VS Code history and groups chats by workspace.
-    * **`Copilot PKM: Export All to .wingman (Current Workspace)`**: Automatically exports *all* chat sessions from the current workspace into a `.wingman` folder at the root of your project. This includes a `history/` subdirectory with Markdown files and a `.project.json` file with metadata.
+    * **`Export Copilot Chat: Current Workspace`**: Shows chats only from the currently open project.
+    * **`Export Copilot Chat: All Workspaces`**: Scans all your local VS Code history and groups chats by workspace.
+    * **`Export Copilot Chat: Backup to .wingman (Bulk Export)`**: Automatically exports *all* chat sessions from the current workspace into a `.wingman` folder at the root of your project. This includes a `history/` subdirectory with Markdown files and a `.project.json` file with metadata.
 3. Select the session you want to export (for single export commands).
 4.  The chat will open instantly in a new **Markdown editor tab**.
 5.  Review the content and **Save** (`Ctrl+S` / `Cmd+S`) it to your preferred location.
 
 ### Converting an Existing File
-1.  Run **`Copilot PKM: Convert Chat Export File...`**.
+1.  Run **`Export Copilot Chat: Convert JSON/JSONL File...`**.
 2.  Select a `.json` or `.jsonl` file from your computer.
 3.  The extension will parse it and open the Markdown version in a new tab.
 
