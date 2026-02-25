@@ -1,5 +1,6 @@
 {
   "name": "copilot-chat-pkm-exporter",
+  "publisher": "copilot-pkm-bridge",
   "displayName": "Copilot Chat PKM Exporter",
   "description": "Exports local GitHub Copilot JSONL chat history to structured Markdown.",
   "version": "0.0.1",
@@ -14,10 +15,26 @@
   "contributes": {
     "commands": [
       {
-        "command": "copilot-chat-pkm-exporter.helloWorld",
-        "title": "Hello World"
+        "command": "copilot-pkm-bridge.exportChat",
+        "title": "Copilot PKM: Export Chat to Markdown",
+        "category": "Copilot PKM"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Copilot PKM Bridge",
+      "properties": {
+        "copilot-pkm-bridge.defaultExportFolder": {
+          "type": "string",
+          "default": "${workspaceFolder}/.docs/ai-logs",
+          "description": "Default folder to save exported chats. Supports ${workspaceFolder} and ${userHome}."
+        },
+        "copilot-pkm-bridge.includeMetadata": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include metadata (model, date, etc.) in the exported Markdown."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

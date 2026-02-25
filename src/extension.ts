@@ -1,26 +1,57 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { StorageLocator } from './storageLocator';
+import { ChatParser } from './chatParser';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    const locator = new StorageLocator();
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "copilot-chat-pkm-exporter" is now active!');
+    context.subscriptions.push(vscode.commands.registerCommand('copilot-pkm-bridge.exportChat', async () => {
+        // Show progress indicator while loading sessions
+        const sessions = await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Scanning Copilot chat sessions...",
+            cancellable: false
+        }, async () => {
+            return await locator.getAllSessions();
+        });
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('copilot-chat-pkm-exporter.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Copilot Chat PKM Exporter!');
-	});
+        if (sessions.length === 0) {
+            vscode.window.showInformationMessage('No Copilot chat sessions found.');
+            return;
+        }
 
-	context.subscriptions.push(disposable);
+        // Sort by date descending
+        sessions.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+        const items = sessions.map(s => ({
+            label: s.title || 'Untitled Session',
+            description: `${s.date.toLocaleDateString()} — ${s.turnCount} turns`,
+            detail: s.workspaceName,
+            session: s
+        }));
+
+        const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: 'Select a Copilot chat session to export',
+            matchOnDescription: true,
+            matchOnDetail: true
+        });
+
+        if (selected) {
+            try {
+                const parsed = await ChatParser.parse(selected.session.path);
+                const markdown = ChatParser.toMarkdown(parsed);
+
+                const doc = await vscode.workspace.openTextDocument({
+                    content: markdown,
+                    language: 'markdown'
+                });
+
+                await vscode.window.showTextDocument(doc);
+            } catch (error) {
+                vscode.window.showErrorMessage(`Failed to export chat: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
+    }));
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
