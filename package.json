@@ -6,7 +6,7 @@
   "version": "0.0.2",
   "repository": {
     "type": "git",
-    "url": "git@github.com:shdwkl/copilot-chat-exporter.git"
+    "url": "https://github.com/shdwkl/copilot-chat-exporter.git"
   },
   "engines": {
     "vscode": "^1.109.0"
