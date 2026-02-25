@@ -35,4 +35,22 @@ suite('ChatParser JSONL Test Suite', () => {
         assert.strictEqual(session.messages[0].content, 'Base Prompt');
         assert.strictEqual(session.messages[1].content, 'Base Response');
     });
+
+    test('Parses complex Copilot JSONL structure', () => {
+        const jsonl = [
+            JSON.stringify({kind:0,v:{version:3,requests:[],sessionId:"real-session"}}),
+            JSON.stringify({kind:1,k:["inputState","inputText"],v:"User Prompt"}),
+            JSON.stringify({kind:2,k:["requests"],v:[{requestId:"req1",message:{text:"User Prompt"},response:[{kind:"mcpServersStarting"}]}]}),
+            JSON.stringify({kind:2,k:["requests",0,"response"],v:[{value:"First part "}]}),
+            JSON.stringify({kind:2,k:["requests",0,"response"],v:[{value:"Second part"}]}),
+            // Some ignored updates
+            JSON.stringify({kind:1,k:["requests",0,"modelState"],v:{value:1}})
+        ].join('\n');
+
+        const session = ChatParser.parseContent(jsonl);
+        assert.strictEqual(session.sessionId, 'real-session');
+        assert.strictEqual(session.messages.length, 2);
+        assert.strictEqual(session.messages[0].content, 'User Prompt');
+        assert.strictEqual(session.messages[1].content, 'First part Second part');
+    });
 });
