@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
+import * as cp from 'child_process';
 import { StorageLocator, ChatSessionSummary } from './storageLocator';
 import { ChatParser, ChatSession, MarkdownOptions } from './chatParser';
 
@@ -34,7 +35,31 @@ export function activate(context: vscode.ExtensionContext) {
         await pickAndExportSession(locator, currentWorkspaceId, false);
     }));
 
-    // Command 3: Convert File
+    // Command 3: Export All to .wingman
+    context.subscriptions.push(vscode.commands.registerCommand('copilot-pkm-bridge.exportAllToWingman', async () => {
+        let currentWorkspaceId: string | undefined;
+        
+        if (context.storageUri) {
+            try {
+                currentWorkspaceId = path.basename(path.dirname(context.storageUri.fsPath));
+            } catch (e) { }
+        }
+
+        if (!currentWorkspaceId) {
+            vscode.window.showErrorMessage('Cannot determine current workspace ID. Open a workspace folder first.');
+            return;
+        }
+
+        const wsFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!wsFolder) {
+             vscode.window.showErrorMessage('No workspace folder open. Please open a folder to use this feature.');
+             return;
+        }
+
+        await exportAllToWingman(locator, currentWorkspaceId, wsFolder.uri.fsPath);
+    }));
+
+    // Command 4: Convert File
     context.subscriptions.push(vscode.commands.registerCommand('copilot-pkm-bridge.convertFile', async () => {
         const fileUris = await vscode.window.showOpenDialog({
             canSelectMany: false,
@@ -57,6 +82,104 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(`Failed to convert file: ${error instanceof Error ? error.message : String(error)}`);
         }
     }));
+}
+
+async function exportAllToWingman(locator: StorageLocator, workspaceId: string, workspacePath: string) {
+    const sessions = await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Scanning chat sessions...",
+    }, async () => {
+        return await locator.getAllSessions(workspaceId);
+    });
+
+    if (sessions.length === 0) {
+        vscode.window.showInformationMessage('No chat sessions found to export.');
+        return;
+    }
+
+    // Setup .wingman structure
+    const wingmanDir = path.join(workspacePath, '.wingman');
+    const historyDir = path.join(wingmanDir, 'history');
+    
+    if (!fs.existsSync(historyDir)) {
+        fs.mkdirSync(historyDir, { recursive: true });
+    }
+
+    // Write metadata files
+    const projectName = vscode.workspace.name || path.basename(workspacePath);
+    const gitId = await getGitId(workspacePath);
+    const now = new Date().toISOString();
+    
+    const projectJson = {
+        workspace_id: workspaceId,
+        workspace_id_at: now,
+        project_name: projectName,
+        cloud_sync: true,
+        git_id: gitId,
+        git_id_at: now,
+        user_id: "unknown" 
+    };
+
+    fs.writeFileSync(path.join(wingmanDir, '.project.json'), JSON.stringify(projectJson, null, 2), 'utf8');
+    
+    const whatIsThis = `# Wingman Artifacts Directory
+    
+This directory is automatically created and maintained by the Copilot PKM Bridge extension to preserve your AI chat history.
+    
+## What's Here?
+    
+- \`.wingman/history\`: Contains markdown files of your AI coding sessions.
+    - Each file represents a separate AI chat session.
+- \`.wingman/.project.json\`: Contains the persistent project identity for the current workspace.
+    
+## Version Control
+    
+We recommend keeping this directory under version control to maintain a history of your AI interactions.
+`;
+    fs.writeFileSync(path.join(wingmanDir, 'WHAT_IS_THIS.md'), whatIsThis, 'utf8');
+
+    // Export sessions
+    await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: `Exporting ${sessions.length} sessions to .wingman...`,
+        cancellable: true
+    }, async (progress, token) => {
+        let count = 0;
+        for (const session of sessions) {
+            if (token.isCancellationRequested) {
+                break;
+            }
+            
+            try {
+                const parsed = await ChatParser.parse(session.path);
+                const markdown = ChatParser.toMarkdown(parsed, { workspaceName: projectName, includeMetadata: true });
+                
+                const safeTitle = (parsed.title || 'chat').replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 100);
+                const dateStr = parsed.date;
+                const fileName = `${dateStr}-${safeTitle}.md`;
+                
+                await fs.promises.writeFile(path.join(historyDir, fileName), markdown, 'utf8');
+                count++;
+                progress.report({ increment: (1 / sessions.length) * 100, message: `${count}/${sessions.length}` });
+            } catch (e) {
+                console.error(`Failed to export session ${session.sessionId}:`, e);
+            }
+        }
+    });
+
+    vscode.window.showInformationMessage(`Successfully exported ${sessions.length} sessions to .wingman/history`);
+}
+
+function getGitId(workspacePath: string): Promise<string | undefined> {
+    return new Promise((resolve) => {
+        cp.exec('git rev-parse HEAD', { cwd: workspacePath }, (error, stdout) => {
+            if (error) {
+                resolve(undefined);
+            } else {
+                resolve(stdout.trim());
+            }
+        });
+    });
 }
 
 async function pickAndExportSession(locator: StorageLocator, filterWorkspaceId?: string, groupByWorkspace: boolean = false) {

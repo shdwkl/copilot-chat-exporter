@@ -3,7 +3,7 @@
   "publisher": "copilot-pkm-bridge",
   "displayName": "Copilot Chat PKM Exporter",
   "description": "Exports local GitHub Copilot JSONL chat history to structured Markdown.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.109.0"
   },
@@ -22,6 +22,11 @@
       {
         "command": "copilot-pkm-bridge.exportChatCurrent",
         "title": "Copilot PKM: Export Chat (Current Workspace)",
+        "category": "Copilot PKM"
+      },
+      {
+        "command": "copilot-pkm-bridge.exportAllToWingman",
+        "title": "Copilot PKM: Export All to .wingman (Current Workspace)",
         "category": "Copilot PKM"
       },
       {
