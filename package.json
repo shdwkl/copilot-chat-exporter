@@ -8,6 +8,7 @@
     "type": "git",
     "url": "https://github.com/shdwkl/copilot-chat-exporter.git"
   },
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.109.0"
   },
@@ -18,13 +19,17 @@
     "export",
     "jsonl",
     "history",
+    "logseq",
     "obsidian",
     "pkm"
   ],
   "categories": [
+    "Machine Learning",
+    "Formatters",
+    "Documentation",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": ["onStartupFinished"],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
