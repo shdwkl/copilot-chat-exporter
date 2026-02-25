@@ -137,10 +137,18 @@ export class ChatParser {
                 if (resp.value && typeof resp.value === 'string') {
                     responseText += resp.value;
                 } else if (resp.kind === 'toolInvocationSerialized') {
-                    // Include basic tool info if helpful, or skip
-                    // For now, let's include terminal commands if we can find them, matching user snippet
-                    // The user snippet accessed resp.toolSpecificData.terminalCommandOutput etc.
-                    // We'll stick to 'value' for now to keep it simple and safe unless we see data.
+                    const toolData = resp.toolSpecificData || {};
+                    if (toolData.kind === 'terminal') {
+                        const cmd = toolData.commandLine?.original || '';
+                        const out = toolData.terminalCommandOutput?.text || '';
+
+                        responseText += `\n\n> **[Terminal]** Executed Command:\n> \`\`\`bash\n> ${cmd}\n> \`\`\`\n`;
+
+                        if (out.trim()) {
+                            const cleanOut = out.replace(/\r\n/g, '\n').trim();
+                            responseText += `\n**Output:**\n\`\`\`bash\n${cleanOut}\n\`\`\`\n\n`;
+                        }
+                    }
                 }
             }
             

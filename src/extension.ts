@@ -31,6 +31,37 @@ export function activate(context: vscode.ExtensionContext) {
 
         await pickAndExportSession(locator, currentWorkspaceId, false);
     }));
+
+    // Command 3: Convert File
+    context.subscriptions.push(vscode.commands.registerCommand('copilot-pkm-bridge.convertFile', async () => {
+        const fileUris = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            openLabel: 'Convert Copilot Chat',
+            filters: {
+                'Copilot Exports': ['json', 'jsonl'],
+                'All Files': ['*']
+            }
+        });
+
+        if (!fileUris || fileUris.length === 0) {
+            return;
+        }
+
+        const filePath = fileUris[0].fsPath;
+        try {
+            const parsed = await ChatParser.parse(filePath);
+            const markdown = ChatParser.toMarkdown(parsed);
+
+            const doc = await vscode.workspace.openTextDocument({
+                content: markdown,
+                language: 'markdown'
+            });
+
+            await vscode.window.showTextDocument(doc);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to convert file: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }));
 }
 
 async function pickAndExportSession(locator: StorageLocator, filterWorkspaceId?: string, groupByWorkspace: boolean = false) {

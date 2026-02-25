@@ -23,6 +23,11 @@
         "command": "copilot-pkm-bridge.exportChatCurrent",
         "title": "Copilot PKM: Export Chat (Current Workspace)",
         "category": "Copilot PKM"
+      },
+      {
+        "command": "copilot-pkm-bridge.convertFile",
+        "title": "Copilot PKM: Convert Chat Export File...",
+        "category": "Copilot PKM"
       }
     ],
     "configuration": {
