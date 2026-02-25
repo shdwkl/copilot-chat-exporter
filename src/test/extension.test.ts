@@ -17,5 +17,6 @@ suite('Extension Test Suite', () => {
         const copilotCommands = commands.filter(c => c.startsWith('copilot'));
         console.log('Available copilot commands:', copilotCommands);
         assert.ok(commands.includes('copilot-pkm-bridge.exportChat'), 'Command copilot-pkm-bridge.exportChat not found');
+        assert.ok(commands.includes('copilot-pkm-bridge.exportChatCurrent'), 'Command copilot-pkm-bridge.exportChatCurrent not found');
     });
 });

@@ -1,57 +1,115 @@
 import * as vscode from 'vscode';
-import { StorageLocator } from './storageLocator';
+import * as path from 'path';
+import { StorageLocator, ChatSessionSummary } from './storageLocator';
 import { ChatParser } from './chatParser';
 
 export function activate(context: vscode.ExtensionContext) {
     const locator = new StorageLocator();
 
+    // Command 1: Export from All Workspaces
     context.subscriptions.push(vscode.commands.registerCommand('copilot-pkm-bridge.exportChat', async () => {
-        // Show progress indicator while loading sessions
-        const sessions = await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: "Scanning Copilot chat sessions...",
-            cancellable: false
-        }, async () => {
-            return await locator.getAllSessions();
-        });
+        await pickAndExportSession(locator, undefined, true);
+    }));
 
-        if (sessions.length === 0) {
-            vscode.window.showInformationMessage('No Copilot chat sessions found.');
-            return;
-        }
-
-        // Sort by date descending
-        sessions.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-        const items = sessions.map(s => ({
-            label: s.title || 'Untitled Session',
-            description: `${s.date.toLocaleDateString()} — ${s.turnCount} turns`,
-            detail: s.workspaceName,
-            session: s
-        }));
-
-        const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: 'Select a Copilot chat session to export',
-            matchOnDescription: true,
-            matchOnDetail: true
-        });
-
-        if (selected) {
+    // Command 2: Export from Current Workspace
+    context.subscriptions.push(vscode.commands.registerCommand('copilot-pkm-bridge.exportChatCurrent', async () => {
+        let currentWorkspaceId: string | undefined;
+        
+        // Try to derive workspace ID from context.storageUri
+        // Path format: .../User/workspaceStorage/<hash>/<extension-id>
+        if (context.storageUri) {
             try {
-                const parsed = await ChatParser.parse(selected.session.path);
-                const markdown = ChatParser.toMarkdown(parsed);
-
-                const doc = await vscode.workspace.openTextDocument({
-                    content: markdown,
-                    language: 'markdown'
-                });
-
-                await vscode.window.showTextDocument(doc);
-            } catch (error) {
-                vscode.window.showErrorMessage(`Failed to export chat: ${error instanceof Error ? error.message : String(error)}`);
+                currentWorkspaceId = path.basename(path.dirname(context.storageUri.fsPath));
+            } catch (e) {
+                // Ignore path errors
             }
         }
+
+        if (!currentWorkspaceId) {
+            vscode.window.showWarningMessage('Could not detect current workspace storage ID. Showing all sessions instead.');
+        }
+
+        await pickAndExportSession(locator, currentWorkspaceId, false);
     }));
+}
+
+async function pickAndExportSession(locator: StorageLocator, filterWorkspaceId?: string, groupByWorkspace: boolean = false) {
+    // Show progress indicator while loading sessions
+    const sessions = await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: filterWorkspaceId ? "Scanning current workspace chat sessions..." : "Scanning all Copilot chat sessions...",
+        cancellable: false
+    }, async () => {
+        return await locator.getAllSessions(filterWorkspaceId);
+    });
+
+    if (sessions.length === 0) {
+        const msg = filterWorkspaceId 
+            ? 'No Copilot chat sessions found for this workspace.' 
+            : 'No Copilot chat sessions found.';
+        vscode.window.showInformationMessage(msg);
+        return;
+    }
+
+    let items: (vscode.QuickPickItem & { session?: ChatSessionSummary })[] = [];
+
+    if (groupByWorkspace) {
+        // Sort by workspace name first, then date
+        sessions.sort((a, b) => {
+            const wsCompare = a.workspaceName.localeCompare(b.workspaceName);
+            if (wsCompare !== 0) {
+                return wsCompare;
+            }
+            return b.date.getTime() - a.date.getTime();
+        });
+
+        let lastWorkspace = '';
+        for (const session of sessions) {
+            if (session.workspaceName !== lastWorkspace) {
+                items.push({
+                    label: session.workspaceName,
+                    kind: vscode.QuickPickItemKind.Separator
+                });
+                lastWorkspace = session.workspaceName;
+            }
+            items.push(createQuickPickItem(session));
+        }
+    } else {
+        // Simple date sort for single workspace or flat list
+        sessions.sort((a, b) => b.date.getTime() - a.date.getTime());
+        items = sessions.map(createQuickPickItem);
+    }
+
+    const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: filterWorkspaceId ? 'Select a chat session to export' : 'Select a chat session (grouped by workspace)',
+        matchOnDescription: true,
+        matchOnDetail: true
+    });
+
+    if (selected && selected.session) {
+        try {
+            const parsed = await ChatParser.parse(selected.session.path);
+            const markdown = ChatParser.toMarkdown(parsed);
+
+            const doc = await vscode.workspace.openTextDocument({
+                content: markdown,
+                language: 'markdown'
+            });
+
+            await vscode.window.showTextDocument(doc);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to export chat: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+}
+
+function createQuickPickItem(session: ChatSessionSummary): vscode.QuickPickItem & { session: ChatSessionSummary } {
+    return {
+        label: session.title || 'Untitled Session',
+        description: `${session.date.toLocaleDateString()} — ${session.turnCount} turns`,
+        detail: session.workspaceName,
+        session: session
+    };
 }
 
 export function deactivate() {}
