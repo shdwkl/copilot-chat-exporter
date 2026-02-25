@@ -84,6 +84,7 @@ export class ChatParser {
         const requestsDict: Record<number, { prompt: string, responses: any[] }> = {};
         let sessionId = '';
         let creationDate = '';
+        let customTitle = '';
 
         for (const line of lines) {
             if (!line.trim()) {
@@ -110,6 +111,12 @@ export class ChatParser {
                             const prompt = req.message?.text || '';
                             requestsDict[idx] = { prompt, responses: req.response || [] };
                         });
+                    }
+                }
+                // Custom Title parsing
+                else if (kind === 1 && k.length === 1 && k[0] === 'customTitle') {
+                    if (typeof v === 'string') {
+                        customTitle = v;
                     }
                 }
                 // Appended requests parsing
@@ -175,7 +182,7 @@ export class ChatParser {
         return {
             sessionId,
             date: creationDate || new Date().toISOString().split('T')[0],
-            title: this.deriveTitle(messages),
+            title: customTitle || this.deriveTitle(messages),
             messages
         };
     }

@@ -53,4 +53,17 @@ suite('ChatParser JSONL Test Suite', () => {
         assert.strictEqual(session.messages[0].content, 'User Prompt');
         assert.strictEqual(session.messages[1].content, 'First part Second part');
     });
+
+    test('Parses JSONL with customTitle', () => {
+        const jsonl = [
+            JSON.stringify({kind:0,v:{sessionId:"titled-session",requests:[]}}),
+            JSON.stringify({kind:1,k:["customTitle"],v:"My Custom Title"}),
+            JSON.stringify({kind:2,k:["requests"],v:[{message:{text:"Hello"},response:[{value:"Hi"}]}]})
+        ].join('\n');
+
+        const session = ChatParser.parseContent(jsonl);
+        assert.strictEqual(session.sessionId, 'titled-session');
+        assert.strictEqual(session.title, 'My Custom Title');
+        assert.strictEqual(session.messages[0].content, 'Hello');
+    });
 });
