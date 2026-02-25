@@ -8,7 +8,13 @@ export interface ChatMessage {
 export interface ChatSession {
     sessionId: string;
     date: string;
+    title?: string;
     messages: ChatMessage[];
+}
+
+export interface MarkdownOptions {
+    includeMetadata?: boolean;
+    workspaceName?: string;
 }
 
 export class ChatParser {
@@ -24,6 +30,14 @@ export class ChatParser {
         } catch (e) {
             return this.parseJsonl(content);
         }
+    }
+
+    private static deriveTitle(messages: ChatMessage[]): string {
+        const firstUserMsg = messages.find(m => m.role === 'user');
+        if (firstUserMsg) {
+            return firstUserMsg.content.substring(0, 50).replace(/[\r\n]+/g, ' ').trim();
+        }
+        return 'Untitled Session';
     }
 
     private static parseJson(json: any): ChatSession {
@@ -60,6 +74,7 @@ export class ChatParser {
         return {
             sessionId: json.sessionId,
             date: new Date(json.creationDate).toISOString().split('T')[0],
+            title: this.deriveTitle(messages),
             messages
         };
     }
@@ -160,21 +175,30 @@ export class ChatParser {
         return {
             sessionId,
             date: creationDate || new Date().toISOString().split('T')[0],
+            title: this.deriveTitle(messages),
             messages
         };
     }
 
-    public static toMarkdown(session: ChatSession): string {
-        let md = `# Copilot Chat — ${session.date}
+    public static toMarkdown(session: ChatSession, options?: MarkdownOptions): string {
+        let md = '';
 
-`;
+        if (options?.includeMetadata) {
+            md += '---\n';
+            md += `date: ${session.date}\n`;
+            md += `title: "${(session.title || 'Copilot Chat').replace(/"/g, '\\"')}"\n`;
+            md += `tags: [copilot, chat-export]\n`;
+            if (options.workspaceName) {
+                md += `workspace: "${options.workspaceName.replace(/"/g, '\\"')}"\n`;
+            }
+            md += '---\n\n';
+        }
+
+        md += `# ${session.title || `Copilot Chat — ${session.date}`}\n\n`;
         
         for (const msg of session.messages) {
             const roleHeader = msg.role === 'user' ? '**User**' : '**Copilot**';
-            md += `${roleHeader}
-${msg.content}
-
-`;
+            md += `${roleHeader}\n${msg.content}\n\n`;
         }
 
         return md;

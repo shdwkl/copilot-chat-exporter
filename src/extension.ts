@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs';
 import { StorageLocator, ChatSessionSummary } from './storageLocator';
-import { ChatParser } from './chatParser';
+import { ChatParser, ChatSession, MarkdownOptions } from './chatParser';
 
 export function activate(context: vscode.ExtensionContext) {
     const locator = new StorageLocator();
@@ -50,14 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
         const filePath = fileUris[0].fsPath;
         try {
             const parsed = await ChatParser.parse(filePath);
-            const markdown = ChatParser.toMarkdown(parsed);
-
-            const doc = await vscode.workspace.openTextDocument({
-                content: markdown,
-                language: 'markdown'
-            });
-
-            await vscode.window.showTextDocument(doc);
+            await exportMarkdown(parsed, { workspaceName: 'Imported File' });
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to convert file: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -120,14 +115,7 @@ async function pickAndExportSession(locator: StorageLocator, filterWorkspaceId?:
     if (selected && selected.session) {
         try {
             const parsed = await ChatParser.parse(selected.session.path);
-            const markdown = ChatParser.toMarkdown(parsed);
-
-            const doc = await vscode.workspace.openTextDocument({
-                content: markdown,
-                language: 'markdown'
-            });
-
-            await vscode.window.showTextDocument(doc);
+            await exportMarkdown(parsed, { workspaceName: selected.session.workspaceName });
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to export chat: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -141,6 +129,70 @@ function createQuickPickItem(session: ChatSessionSummary): vscode.QuickPickItem 
         detail: session.workspaceName,
         session: session
     };
+}
+
+async function exportMarkdown(session: ChatSession, options?: MarkdownOptions) {
+    const config = vscode.workspace.getConfiguration('copilot-pkm-bridge');
+    const includeMetadata = config.get<boolean>('includeMetadata', true);
+    const defaultFolder = config.get<string>('defaultExportFolder', '');
+
+    const markdown = ChatParser.toMarkdown(session, { ...options, includeMetadata });
+
+    if (defaultFolder && defaultFolder.trim() !== '') {
+        try {
+            const resolvedPath = resolvePath(defaultFolder);
+            
+            // Create folder if not exists
+            if (!fs.existsSync(resolvedPath)) {
+                fs.mkdirSync(resolvedPath, { recursive: true });
+            }
+
+            // Sanitize filename
+            const safeTitle = (session.title || 'chat').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const dateStr = session.date; // YYYY-MM-DD
+            const fileName = `copilot-${dateStr}-${safeTitle}.md`;
+            const fullPath = path.join(resolvedPath, fileName);
+
+            // Write file
+            await fs.promises.writeFile(fullPath, markdown, 'utf8');
+
+            // Open document
+            const doc = await vscode.workspace.openTextDocument(fullPath);
+            await vscode.window.showTextDocument(doc);
+            
+            vscode.window.showInformationMessage(`Exported to ${fileName}`);
+            return;
+
+        } catch (e) {
+            vscode.window.showErrorMessage(`Failed to save to default folder: ${e}. Opening unsaved tab instead.`);
+            // Fallthrough to unsaved tab
+        }
+    }
+
+    // Fallback: Open untitled document
+    const doc = await vscode.workspace.openTextDocument({
+        content: markdown,
+        language: 'markdown'
+    });
+    await vscode.window.showTextDocument(doc);
+}
+
+export function resolvePath(p: string): string {
+    if (p.includes('${userHome}')) {
+        p = p.replace('${userHome}', os.homedir());
+    }
+    
+    if (p.includes('${workspaceFolder}')) {
+        const ws = vscode.workspace.workspaceFolders?.[0];
+        if (ws) {
+            p = p.replace('${workspaceFolder}', ws.uri.fsPath);
+        } else {
+            // Fallback if no workspace is open
+            p = p.replace('${workspaceFolder}', os.homedir()); 
+        }
+    }
+    
+    return path.normalize(p);
 }
 
 export function deactivate() {}
