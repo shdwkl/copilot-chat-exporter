@@ -4,6 +4,27 @@ All notable changes to the "copilot-chat-pkm-exporter" extension will be documen
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.7] - 2026-02-26
+
+### Added
+- **Tool Invocation Parsing**: Added support for `toolInvocationSerialized` messages. The exporter now captures:
+  - Tool names and their descriptive messages (e.g., "Reading file...", "Searching for text...").
+  - Terminal commands and their outputs for `run_in_terminal` or `terminal` tools.
+  - Formatted blocks in Markdown to clearly distinguish tool activity from model responses.
+
+## [0.0.6] - 2026-02-26
+
+### Changed
+- **Rebranding**: Extension renamed to **Copilot Chat to Markdown** for better search discoverability.
+- **Improved Keywords**: Updated keywords to include "copilot", "chat", "markdown", "export", "jsonl", "history", "logseq", "obsidian", "pkm".
+
+### Fixed
+- Updated extension identifier in tests to match the new name `imperium-dev.copilot-chat-to-markdown`.
+
+## [0.0.3] - 0.0.5
+
+- Incremental internal updates and bug fixes.
+
 ## [0.0.2] - 2026-02-25
 
 ### Added
