@@ -159,16 +159,23 @@ export class ChatParser {
                 if (resp.value && typeof resp.value === 'string') {
                     responseText += resp.value;
                 } else if (resp.kind === 'toolInvocationSerialized') {
+                    const toolName = resp.toolId || 'Tool';
+                    const invocationMsg = resp.pastTenseMessage?.value || resp.invocationMessage?.value || 'Used tool';
+                    
+                    responseText += `\n\n> **[${toolName}]** ${invocationMsg}\n`;
+                    
                     const toolData = resp.toolSpecificData || {};
                     if (toolData.kind === 'terminal') {
                         const cmd = toolData.commandLine?.original || '';
                         const out = toolData.terminalCommandOutput?.text || '';
 
-                        responseText += `\n\n> **[Terminal]** Executed Command:\n> \`\`\`bash\n> ${cmd}\n> \`\`\`\n`;
+                        if (cmd) {
+                            responseText += `> \`\`\`bash\n> ${cmd}\n> \`\`\`\n`;
+                        }
 
                         if (out.trim()) {
                             const cleanOut = out.replace(/\r\n/g, '\n').trim();
-                            responseText += `\n**Output:**\n\`\`\`bash\n${cleanOut}\n\`\`\`\n\n`;
+                            responseText += `\n**Terminal Output:**\n\`\`\`bash\n${cleanOut}\n\`\`\`\n\n`;
                         }
                     }
                 }

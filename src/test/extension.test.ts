@@ -4,11 +4,9 @@ import * as vscode from 'vscode';
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
-	test('Extension should be present and activate', async () => {
-		const ext = vscode.extensions.getExtension('copilot-pkm-bridge.copilot-chat-pkm-exporter');
-        assert.ok(ext, 'Extension not found');
-        
-        await ext.activate();
+	                test('Extension should be present and activate', async () => {
+	                        const ext = vscode.extensions.getExtension('imperium-dev.copilot-chat-to-markdown');
+	                assert.ok(ext, 'Extension not found');        await ext.activate();
         assert.ok(ext.isActive, 'Extension failed to activate');
 	});
 
