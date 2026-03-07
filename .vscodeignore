@@ -7,6 +7,8 @@ src/**
 .yarnrc
 esbuild.js
 vsc-extension-quickstart.md
+.specstory/**
+PRD.md
 **/tsconfig.json
 **/eslint.config.mjs
 **/*.map

@@ -66,3 +66,7 @@ Recover your AI conversations from VS Code's internal storage or exported files 
 ---
 
 **Enjoy building your AI knowledge base!**
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
